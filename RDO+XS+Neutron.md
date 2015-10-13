@@ -16,7 +16,8 @@ Make sure SR is EXT3 (in the installer this is called XenDesktop optimised stora
 OpenStack VM is used for installing OpenStack software. One VM per hypervisor using 
 XenServer 6.5 and RHEL7/CentOS7 templates. Please ensure they are HVM guests.
 
-2.1 Create network and interface. Please upload `rdo_xs_helper.sh` at both Dom0 and DomU.
+2.1 Create network and interface. Please upload [rdo_xenserver_helper.sh](https://github.com/Annie-XIE/summary-os/blob/master/rdo_xenserver_helper.sh) 
+at both Dom0 and DomU.
 
 		create_vif <vm_uuid>
 
