@@ -125,6 +125,16 @@ This is corresponding to RDO's answer file, if ifcfg-eth1 not exist, create one
 
 
 ##### 7. Launch another neutron-openvswitch-agent for talking with Dom0
+
+For all-in-one installation, typically there should be only one neutron-openvswitch-agent.
+Please refer [Deployment Model](https://github.com/Annie-XIE/summary-os/blob/master/deployment-neutron-1.png)
+
+However, XenServer has a seperation of Dom0 and DomU and all instances' VIFs are actually 
+managed by Dom0. Their corresponding OVS ports are created in Dom0. Thus, we should manually
+start the other ovs agent which is in charge of these ports and is talking to Dom0, 
+refer [xenserver_neutron picture](https://github.com/Annie-XIE/summary-os/blob/master/xs-neutron-deployment.png).
+
+
 7.1 Create another configuration file
 
     cp /etc/neutron/plugins/openvswitch/ovs_neutron_plugin.ini /etc/neutron/plugins/openvswitch/ovs_neutron_plugin.ini.dom0
@@ -144,11 +154,6 @@ This is corresponding to RDO's answer file, if ifcfg-eth1 not exist, create one
 7.2 Launch neutron-openvswitch-agent
 
     /usr/bin/python2 /usr/bin/neutron-openvswitch-agent --config-file /usr/share/neutron/neutron-dist.conf --config-file /etc/neutron/neutron.conf --config-file /etc/neutron/plugins/openvswitch/ovs_neutron_plugin.ini.dom0 --config-dir /etc/neutron/conf.d/neutron-openvswitch-agent --log-file /var/log/neutron/openvswitch-agent.log.dom0 &
-    
-*Note: For all-in-one installation, typically there is only one neutron-openvswitch-agent.
-However, XenServer has seperation of Dom0 and DomU and all instances' VIFs are actually 
-managed by Dom0 and the corresponding OVS port is created in Dom0. Thus, we should manually
-start the other ovs agent to let it talk to Dom0*
 
 ##### 8. Restart Nova Services
     for svc in api cert conductor compute scheduler; do \
