@@ -17,16 +17,16 @@ OpenStack VM is used for installing OpenStack software. One VM per hypervisor us
 XenServer 6.5 and RHEL7/CentOS7 templates. Please ensure they are HVM guests.
 
 2.1 Create network for OpenStack. In single box environment, we need three networks, 
-Integration network, External network, VM network. If you have appropriate networks for 
-the above (for example, a network that gives you external access) then rename the 
+`Integration network`, `External network`, `VM network`. If you have appropriate networks 
+for the above (for example, a network that gives you external access) then rename the 
 existing network to have the appropriate name-label .
 
 You can upload [rdo_xenserver_helper.sh](https://github.com/Annie-XIE/summary-os/blob/master/rdo_xenserver_helper.sh) 
-to Dom0 and DomU, then create these networks automatically.
+to Dom0, then create these networks automatically.
 
 		create_network
 
-2.2 Create interface networks for OpenStack VM
+2.2 Create virtual network interfaces for OpenStack VM
 
 		create_vif <vm_uuid>
 
@@ -35,25 +35,24 @@ or can be the string 'autodetect' to ask XAPI to pick the next device number*
 
 ##### 3. Install RDO
 3.1 [RDO Quickstart](https://www.rdoproject.org/Quickstart) gives detailed 
-installation guide, please follow the instruction step by step.
+installation guide, please follow the instruction step by step. 
+This manual has points out the ones that must pay attation during installation.
 
 3.2 `Step 1: Software repositories`. 
 
-*Note: If issues are encountered updating the yum repositories, check that 
+*Note: If issues are encountered when updating the yum repositories, check that 
 appropriate upstream repositories are being used. You may need to reboot 
 the VM after yum update*
 
 3.3 `Step 2: Install Packstack Installer` 
 
 *Note: Packstack is the real one that installs OpenStack service. 
-You may also meet package dependency errors during this step, 
-you should fix these errors manually*
+Maybe you will meet packages dependency errors during this step, 
+you should fix these errors manually.*
 
-3.4 `Step 3: Run Packstack to install OpenStack`. Use 
-`packstack --answer-file=<ANSWER_FILE>` instead of all-in-one.
+3.4 `Step 3: Run Packstack to install OpenStack`. 
 
-`packstack --gen-answer-file=<ANSWER_FILE>` will generate an answer file, 
-set neutron related configurations.
+Use `packstack --gen-answer-file=<ANSWER_FILE>` to generate an answer file.
 
 These items should be changed as below:
 
@@ -61,12 +60,14 @@ These items should be changed as below:
     CONFIG_NEUTRON_ML2_TYPE_DRIVERS=vlan
     CONFIG_NEUTRON_ML2_TENANT_NETWORK_TYPES=vlan
 
-There items should be changed according to your environment:
+These items should be changed according to your environment:
 
     CONFIG_DEFAULT_PASSWORD=<your-password>
     CONFIG_NEUTRON_ML2_VLAN_RANGES=<physnet1:1000:1050>
     CONFIG_NEUTRON_OVS_BRIDGE_MAPPINGS=<physnet1:br-eth1>
     CONFIG_NEUTRON_OVS_BRIDGE_IFACES=<br-eth1:eth1>
+
+Use `packstack --answer-file=<ANSWER_FILE>` to install OpenStack components.
 
 ##### 4. Configure OpenStackVM/Hypervisor communications
 4.1 Install XenServer PV tools in the OpenStack VM.
