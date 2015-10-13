@@ -10,37 +10,21 @@ using RDO under RHEL7/CentOS7.
 			Network: Neutron, ML2 plugin, OVS, VLAN
 
 ##### 1. Install XenServer 6.5
-1.1. Make sure SR is EXT3 (in the installer this is called XenDesktop optimised storage).
+Make sure SR is EXT3 (in the installer this is called XenDesktop optimised storage).
 
-1.2 Create network for OpenStack. In single box environment, 
-we need to create three networks, *Integration network*, *External network*, *VM network*.
+##### 2. Install OpenStack VM
+OpenStack VM is used for installing OpenStack software. One VM per hypervisor using 
+XenServer 6.5 and RHEL7/CentOS7 templates. Please ensure they are HVM guests.
 
-		xe network-create name-label=os-int-net
-		xe network-create name-label=os-ex-net
-		xe network-create name-label=os-vm-net
+2.1 Create network and interface. Please upload `rdo_xs_helper.sh` at both Dom0 and DomU.
 
-##### 2. Install Guest VM
-Guest VM is used for installing OpenStack software.
-
-2.1. One VM per hypervisor using XenServer 6.5 and RHEL7/CentOS7 templates. 
-Please ensure that they are HVM guests.
-
-2.2. Create interface card for Guest VM
-
-		xe vif-create device=<device-id> network-uuid=<os-int-net-uuid> vm-uuid=<guest-vm-uuid>
-		xe vif-plug uuid=<vif-id-int-net>
-		xe vif-create device=<device-id> network-uuid=<os-ex-net-uuid> vm-uuid=<guest-vm-uuid>
-		xe vif-plug uuid=<vif-id-ex-net>
-
-*Note: device-id should be set according to your environment*
+		create_vif <vm_uuid>
 
 ##### 3. Install RDO
 3.1 [RDO Quickstart](https://www.rdoproject.org/Quickstart) gives detailed 
-installation guide, please have a look before real work.
+installation guide, please follow the instruction step by step.
 
-3.2 Run `Step 0: Prerequisites` to prepare the environment.
-
-3.3 Run `Step 1: Software repositories`. 
+3.2 `Step 1: Software repositories`. 
 
 *Note:* 
 
@@ -52,16 +36,17 @@ errors, some are not needed in our environment.*
 
 *(c) Reboot the VM after yum update.*
 
-3.4 Run `Step 2: Install Packstack Installer` to install packstack. 
+3.3 Run `Step 2: Install Packstack Installer` 
 
 *Note: Packstack is the real one that installs OpenStack service. 
 You may also meet package dependency errors during this step, 
 you should fix these errors manually*
 
-3.5 Generate answer file `packstack --gen-answer-file=<ANSWER_FILE>`.
+3.4 `Step 3: Run Packstack to install OpenStack`. Use 
+`packstack --answer-file=<ANSWER_FILE>` instead of `packstack --all-in-one`.
 
-3.6 Change *ANSWER_FILE* to set neutron related configurations.
-You should set these configuration items according to your environment.
+`packstack --gen-answer-file=<ANSWER_FILE>` will generate an answer file, 
+change it to use neutron related configurations.
 
     CONFIG_DEFAULT_PASSWORD=<your-password>
     CONFIG_DEBUG_MODE=y
@@ -70,73 +55,29 @@ You should set these configuration items according to your environment.
     CONFIG_NEUTRON_ML2_TYPE_DRIVERS=vlan
     CONFIG_NEUTRON_ML2_TENANT_NETWORK_TYPES=vlan
     CONFIG_NEUTRON_ML2_MECHANISM_DRIVERS=openvswitch
-    CONFIG_NEUTRON_ML2_VLAN_RANGES=physnet1:1000:1050
+    CONFIG_NEUTRON_ML2_VLAN_RANGES=<physnet1:1000:1050>
     CONFIG_NEUTRON_L2_AGENT=openvswitch
-    CONFIG_NEUTRON_OVS_BRIDGE_MAPPINGS=physnet1:br-eth1
-    CONFIG_NEUTRON_OVS_BRIDGE_IFACES=br-eth1:eth1
-
-3.7 Run `Step 3: Run Packstack to install OpenStack`. You should use 
-`packstack --answer-file=<ANSWER_FILE>` instead of `packstack --all-in-one`.
-
-*Note: After the above steps, OpenStack is installed and its services should 
-begin running at the moment. But we should do some additional work with XenServer*
-
-##### 4. Configure GuestVM/Hypervisor communications
-4.1 Ensure XenServer network *os-int-net* has an interface attached to the Guest VMs
-
-4.2 Use HIMN tool (plugin for XenCenter) to add internal management network to
-Guest VMs. This effectively performs the following operations, which could
-also be performed manually in dom0 for each compute node:
-
-    net=$(xe network-list bridge=xenapi --minimal)
-    vm=$(xe vm-list name-label=<vm-name> --minimal)
-    vif=$(xe vif-create vm-uuid=$vm network-uuid=$net device=9)
-    mac=$(xe vif-param-get uuid=$vif param-name=MAC)
-    xe vm-param-set uuid=$vm xenstore-data:vm-data/himn_mac=$mac
-    xe vif-plug uuid=$vif
-
-4.3 Install the XenServer PV tools in the guest VM.
-
-4.4 Set up DHCP on the HIMN network for the gues VM, allowing each 
-compute VM to access it’s own hypervisor on the static address 169.254.0.1.
-
-    domid=$(xenstore-read domid)
-    mac=$(xenstore-read /local/domain/$domid/vm-data/himn_mac)
-    dev_path=$(grep -l $mac /sys/class/net/*/address)
-    dev=$(basename $(dirname $dev_path))
-    cat << EOF > /etc/sysconfig/network-scripts/ifcfg-$dev
-        DEVICE="$dev"
-        BOOTPROTO="dhcp"
-        ONBOOT="yes"
-        TYPE="Ethernet"
-    EOF
-    ifup $dev
-
-4.5 Copy Nova plugins to XenServer host.
-
-Download direct from git.openstack.org since they are not packaged
-
-    mkdir -p /tmp/nova_plugins
-    tag=$(rpm -q openstack-nova-compute --queryformat '%{Version}')
-    base=https://git.openstack.org/cgit/openstack/nova/plain
-    path=plugins/xenserver/xenapi/etc/xapi.d/plugins
-
-    files=$(curl -s -S $base/$path?id=$tag | grep li | grep $path | sed -e 's#.*xapi.d/plugins/##' -e 's#\?id=.*##')
-    for f in $files; do
-      curl -s -S $base/$path/$f?id=$tag -o /tmp/nova_plugins/$f
-    done
-    chmod +x /tmp/nova_plugins/*	
-    scp -p /tmp/nova_plugins/* root@<Dom0 ip>:/etc/xapi.d/plugins/
+    CONFIG_NEUTRON_OVS_BRIDGE_MAPPINGS=<physnet1:br-eth1>
+    CONFIG_NEUTRON_OVS_BRIDGE_IFACES=<br-eth1:eth1>
     
+*Note:*
 
-4.6 Copy Neutron plugin to XenServer host.
+*Values within <> should be set according to your environment*
 
-    mkdir -p /tmp/neutron_plugins
-    cp /usr/lib/python2.7/site-packages/neutron/plugins/openvswitch/agent/xenapi/etc/xapi.d/plugins/* /tmp/neutron_plugins
-    chmod +x /tmp/neutron_plugins/*
-    sed -i "/ALLOWED_CMDS = /a    'ipset', 'iptables-save', 'iptables-restore', 'ip6tables-save', 'ip6tables-restore'," /tmp/neutron_plugins/netwrap
-    scp -p /tmp/neutron_plugins/* root@<Dom0 ip>:/etc/xapi.d/plugins/
+*After these steps, OpenStack is installed and its services should 
+begin running at the moment. *
 
+##### 4. Configure OpenStackVM/Hypervisor communications
+4.1 Install the XenServer PV tools in the OpenStack VM.
+
+4.2 Set up DHCP on HIMN network for the OpenStack VM, so it can access its hypervisor 
+on the static address 169.254.0.1.
+
+		create_himn <vm_uuid>
+
+4.3 Copy Nova and Neutron plugins to XenServer host.
+
+		install_dom0_plugins <dom0_ip>
 
 ##### 5. Configure Nova
 5.1 Edit /etc/nova/nova.conf, switch compute driver to XenServer. 
@@ -146,7 +87,7 @@ Download direct from git.openstack.org since they are not packaged
     firewall_driver=nova.virt.firewall.NoopFirewallDriver
     
     [xenserver]
-    connection_url=http:<Dom0 ip>
+    connection_url=http:169.254.0.1
     connection_username=root
     connection_password=<password>
     vif_driver=nova.virt.xenapi.vif.XenAPIOpenVswitchDriver
@@ -168,7 +109,7 @@ using XenServer remotely.
     [xenapi]
     # XenAPI configuration is only required by the L2 agent if it is to
     # target a XenServer/XCP compute host's dom0.
-    xenapi_connection_url=http://<Dom0 ip>
+    xenapi_connection_url=http://169.254.0.1
     xenapi_connection_username=root
     xenapi_connection_password=<password>
 
