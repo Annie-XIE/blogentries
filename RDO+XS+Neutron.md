@@ -28,7 +28,7 @@ installation guide, please follow the instruction step by step.
 
 *Note:* 
 
-*(a) Please remove the postfix `.orig` of `CentOS-XXX.repo.orig` 
+*(a) Remove the postfix `.orig` of `CentOS-XXX.repo.orig` 
 in folder `/etc/yum.repos.d` and then try `yum update -y`.*
 
 *(b) You may meet errors while executing yum update, you can ignore these 
@@ -36,17 +36,17 @@ errors, some are not needed in our environment.*
 
 *(c) Reboot the VM after yum update.*
 
-3.3 Run `Step 2: Install Packstack Installer` 
+3.3 `Step 2: Install Packstack Installer` 
 
 *Note: Packstack is the real one that installs OpenStack service. 
 You may also meet package dependency errors during this step, 
 you should fix these errors manually*
 
 3.4 `Step 3: Run Packstack to install OpenStack`. Use 
-`packstack --answer-file=<ANSWER_FILE>` instead of `packstack --all-in-one`.
+`packstack --answer-file=<ANSWER_FILE>` instead of all-in-one.
 
 `packstack --gen-answer-file=<ANSWER_FILE>` will generate an answer file, 
-change it to use neutron related configurations.
+set neutron related configurations.
 
     CONFIG_DEFAULT_PASSWORD=<your-password>
     CONFIG_DEBUG_MODE=y
@@ -62,15 +62,14 @@ change it to use neutron related configurations.
     
 *Note:*
 
-*Values within <> should be set according to your environment*
+*(a) Values within <> should be set according to your environment*
 
-*After these steps, OpenStack is installed and its services should 
-begin running at the moment. *
+*(b) OpenStack is installed and is running at the moment.*
 
 ##### 4. Configure OpenStackVM/Hypervisor communications
-4.1 Install the XenServer PV tools in the OpenStack VM.
+4.1 Install XenServer PV tools in the OpenStack VM.
 
-4.2 Set up DHCP on HIMN network for the OpenStack VM, so it can access its hypervisor 
+4.2 Set up DHCP on HIMN network for OpenStack VM, so it can access its hypervisor 
 on the static address 169.254.0.1.
 
 		create_himn <vm_uuid>
@@ -113,17 +112,7 @@ using XenServer remotely.
     xenapi_connection_username=root
     xenapi_connection_password=<password>
 
-6.2 Check configurations in */etc/neutron/plugins/openvswitch/ovs_neutron_plugin.ini* 
-
-    [ovs]
-    integration_bridge = br-int
-    bridge_mappings = physnet1:br-eth1
-
-6.3 Restart neutron service
-
-`service neutron-openvswitch-agent restart`
-	
-6.4 Check network config file
+6.2 Check network config file
 
 This is corresponding to RDO's answer file, if ifcfg-eth1 not exist, create one
 
