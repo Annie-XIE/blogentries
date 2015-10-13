@@ -35,8 +35,6 @@ in folder `/etc/yum.repos.d` and then try `yum update -y`.*
 *(b) You may meet errors while executing yum update, you can ignore these 
 errors, some are not needed in our environment.*
 
-*(c) Reboot the VM after yum update.*
-
 3.3 `Step 2: Install Packstack Installer` 
 
 *Note: Packstack is the real one that installs OpenStack service. 
@@ -70,10 +68,14 @@ set neutron related configurations.
 ##### 4. Configure OpenStackVM/Hypervisor communications
 4.1 Install XenServer PV tools in the OpenStack VM.
 
-4.2 Set up DHCP on HIMN network for OpenStack VM, so it can access its hypervisor 
-on the static address 169.254.0.1.
+4.2 Set up DHCP on HIMN network for OpenStack VM so it can access its hypervisor 
+on the static address 169.254.0.1. You can do this on XenCenter or 
+do this in Dom0 and DomU with below command.
 
+		Dom0:
 		create_himn <vm_uuid>
+		DomU:
+		active_himn_interface
 
 4.3 Copy Nova and Neutron plugins to XenServer host.
 
@@ -117,18 +119,10 @@ using XenServer remotely.
 
 This is corresponding to RDO's answer file, if ifcfg-eth1 not exist, create one
 
-`CONFIG_NEUTRON_OVS_BRIDGE_MAPPINGS=physnet1:br-eth1`
+		CONFIG_NEUTRON_OVS_BRIDGE_MAPPINGS=physnet1:br-eth1
 
-`CONFIG_NEUTRON_OVS_BRIDGE_IFACES=br-eth1:eth1`
+		CONFIG_NEUTRON_OVS_BRIDGE_IFACES=br-eth1:eth1
 
-		touch /etc/sysconfig/network-scripts/ifcfg-eth1
-		cat << EOF > /etc/sysconfig/network-scripts/ifcfg-eth1
-			DEVICE=eth1
-			DEVICETYPE=ovs
-			ONBOOT=yes
-			TYPE=OVSPort
-			OVS_BRIDGE=br-eth1
-			EOF
 
 ##### 7. Launch another neutron-openvswitch-agent for talking with Dom0
 7.1 Create another configuration file
