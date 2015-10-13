@@ -16,10 +16,22 @@ Make sure SR is EXT3 (in the installer this is called XenDesktop optimised stora
 OpenStack VM is used for installing OpenStack software. One VM per hypervisor using 
 XenServer 6.5 and RHEL7/CentOS7 templates. Please ensure they are HVM guests.
 
-2.1 Create network and interface. Please upload [rdo_xenserver_helper.sh](https://github.com/Annie-XIE/summary-os/blob/master/rdo_xenserver_helper.sh) 
-at both Dom0 and DomU.
+2.1 Create network for OpenStack. In single box environment, we need three networks, 
+Integration network, External network, VM network. If you have appropriate networks for 
+the above (for example, a network that gives you external access) then rename the 
+existing network to have the appropriate name-label .
+
+You can upload [rdo_xenserver_helper.sh](https://github.com/Annie-XIE/summary-os/blob/master/rdo_xenserver_helper.sh) 
+to Dom0 and DomU, then create these networks automatically.
+
+		create_network
+
+2.2 Create interface networks for OpenStack VM
 
 		create_vif <vm_uuid>
+
+*Note: device-id should be set according to the number of VIFs in your environment, 
+or can be the string 'autodetect' to ask XAPI to pick the next device number*
 
 ##### 3. Install RDO
 3.1 [RDO Quickstart](https://www.rdoproject.org/Quickstart) gives detailed 
@@ -27,13 +39,9 @@ installation guide, please follow the instruction step by step.
 
 3.2 `Step 1: Software repositories`. 
 
-*Note:* 
-
-*(a) Remove the postfix `.orig` of `CentOS-XXX.repo.orig` 
-in folder `/etc/yum.repos.d` and then try `yum update -y`.*
-
-*(b) You may meet errors while executing yum update, you can ignore these 
-errors, some are not needed in our environment.*
+*Note: If issues are encountered updating the yum repositories, check that 
+appropriate upstream repositories are being used. You may need to reboot 
+the VM after yum update*
 
 3.3 `Step 2: Install Packstack Installer` 
 
@@ -47,37 +55,34 @@ you should fix these errors manually*
 `packstack --gen-answer-file=<ANSWER_FILE>` will generate an answer file, 
 set neutron related configurations.
 
-    CONFIG_DEFAULT_PASSWORD=<your-password>
+These items should be changed as below:
+
     CONFIG_DEBUG_MODE=y
-    CONFIG_NEUTRON_INSTALL=y
-    CONFIG_NEUTRON_L3_EXT_BRIDGE=br-ex
     CONFIG_NEUTRON_ML2_TYPE_DRIVERS=vlan
     CONFIG_NEUTRON_ML2_TENANT_NETWORK_TYPES=vlan
-    CONFIG_NEUTRON_ML2_MECHANISM_DRIVERS=openvswitch
+
+There items should be changed according to your environment:
+
+    CONFIG_DEFAULT_PASSWORD=<your-password>
     CONFIG_NEUTRON_ML2_VLAN_RANGES=<physnet1:1000:1050>
-    CONFIG_NEUTRON_L2_AGENT=openvswitch
     CONFIG_NEUTRON_OVS_BRIDGE_MAPPINGS=<physnet1:br-eth1>
     CONFIG_NEUTRON_OVS_BRIDGE_IFACES=<br-eth1:eth1>
-    
-*Note:*
-
-*(a) Values within <> should be set according to your environment*
-
-*(b) OpenStack is installed and is running at the moment.*
 
 ##### 4. Configure OpenStackVM/Hypervisor communications
 4.1 Install XenServer PV tools in the OpenStack VM.
 
-4.2 Set up DHCP on HIMN network for OpenStack VM so it can access its hypervisor 
-on the static address 169.254.0.1. You can do this on XenCenter or 
-do this in Dom0 and DomU with below command.
+4.2 Use HIMN tool (plugin for XenCenter) to add internal management network 
+to OpenStack VMs. This effectively performs the following operations, which 
+could also be performed manually in dom0 for each compute node.
 
-		Dom0:
 		create_himn <vm_uuid>
-		DomU:
+
+4.3 Set up DHCP on the HIMN network for the OpenStack VM, allowing each OpenStack VM 
+to access its own hypervisor on the static address 169.254.0.1.
+
 		active_himn_interface
 
-4.3 Copy Nova and Neutron plugins to XenServer host.
+4.4 Copy Nova and Neutron plugins to XenServer host.
 
 		install_dom0_plugins <dom0_ip>
 
@@ -95,7 +100,7 @@ do this in Dom0 and DomU with below command.
     vif_driver=nova.virt.xenapi.vif.XenAPIOpenVswitchDriver
     ovs_int_bridge=<integration network bridge>
 
-5.2 Install XenAPI Python XML RPC lightweight bindings
+5.2 Install XenAPI Python XML RPC lightweight bindings.
 
     yum install -y python-pip
     pip install xenapi
