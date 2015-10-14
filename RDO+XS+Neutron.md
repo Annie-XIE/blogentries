@@ -127,15 +127,6 @@ using XenServer remotely.
     xenapi_connection_username=root
     xenapi_connection_password=<password>
 
-6.2 Check network config file
-
-This is corresponding to RDO's answer file, if ifcfg-eth1 not exist, create one
-
-		CONFIG_NEUTRON_OVS_BRIDGE_MAPPINGS=physnet1:br-eth1
-
-		CONFIG_NEUTRON_OVS_BRIDGE_IFACES=br-eth1:eth1
-
-
 ##### 7. Launch another neutron-openvswitch-agent for talking with Dom0
 
 For all-in-one installation, typically there should be only one neutron-openvswitch-agent.
