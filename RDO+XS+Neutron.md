@@ -21,8 +21,8 @@ XenServer 6.5 and RHEL7/CentOS7 templates. Please ensure they are HVM guests.
 for the above (for example, a network that gives you external access) then rename the 
 existing network to have the appropriate name-label .
 
-You can upload [rdo_xenserver_helper.sh](https://github.com/Annie-XIE/summary-os/blob/master/rdo_xenserver_helper.sh) 
-to Dom0, then create these networks automatically.
+You can do this via XenCenter or run command manully or upload [rdo_xenserver_helper.sh](https://github.com/Annie-XIE/summary-os/blob/master/rdo_xenserver_helper.sh) 
+to Dom0, let the script do it automatically.
 
 		create_network
 
