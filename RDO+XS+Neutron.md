@@ -80,6 +80,8 @@ each available for allocation to tenant networks.*
  
 *CONFIG_NEUTRON_OVS_BRIDGE_MAPPINGS is the mapping of network name and ovs bridge*
 
+*CONFIG_NEUTRON_OVS_BRIDGE_IFACES the interface is the one that with vm network*
+
 ##### 4. Configure OpenStackVM/Hypervisor communications
 4.1 Install XenServer PV tools in the OpenStack VM.
 
