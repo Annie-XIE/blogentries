@@ -101,6 +101,12 @@ to access its own hypervisor on the static address 169.254.0.1.
     vif_driver=nova.virt.xenapi.vif.XenAPIOpenVswitchDriver
     ovs_int_bridge=<integration network bridge>
 
+**Note:**
+*How to know integration_bridge and bridge_mapping?*
+
+*In Dom0, run `xe network-list`, the network with name-label integration network, 
+its bridge is integration bridge.*
+
 5.2 Install XenAPI Python XML RPC lightweight bindings.
 
     yum install -y python-pip
@@ -156,6 +162,8 @@ refer [xenserver_neutron picture](https://github.com/Annie-XIE/summary-os/blob/m
     
     [securitygroup]
     firewall_driver = neutron.agent.firewall.NoopFirewallDriver
+
+*Note: For bridge_mapping, it is the bridge with network name-label as vm network*
 
 7.2 Launch neutron-openvswitch-agent
 
