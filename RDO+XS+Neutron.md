@@ -24,11 +24,14 @@ existing network to have the appropriate name-label .
 You can do this via XenCenter or run command manully or upload [rdo_xenserver_helper.sh](https://github.com/Annie-XIE/summary-os/blob/master/rdo_xenserver_helper.sh) 
 to Dom0, let the script do it automatically.
 
-		create_network
+		xe network-create name-label=openstack-int-network
+		xe network-create name-label=openstack-ext-network
+		xe network-create name-label=openstack-vm-network
 
 2.2 Create virtual network interfaces for OpenStack VM
 
-		create_vif <vm_uuid>
+		xe vif-create device=<devid> network-uuid=<int_net_uuid> vm-uuid=<vm_uuid>
+		xe vif-create device=<devid> network-uuid=<ext_net_uuid> vm-uuid=<vm_uuid>
 
 *Note: device-id should be set according to the number of VIFs in your environment, 
 or can be the string 'autodetect' to ask XAPI to pick the next device number*
