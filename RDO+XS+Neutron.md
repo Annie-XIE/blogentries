@@ -103,7 +103,7 @@ to access its own hypervisor on the static address 169.254.0.1.
     firewall_driver=nova.virt.firewall.NoopFirewallDriver
     
     [xenserver]
-    connection_url=http:169.254.0.1
+    connection_url=http://169.254.0.1
     connection_username=root
     connection_password=<password>
     vif_driver=nova.virt.xenapi.vif.XenAPIOpenVswitchDriver
