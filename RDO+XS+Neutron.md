@@ -124,6 +124,12 @@ or
     
     curl https://raw.githubusercontent.com/xapi-project/xen-api/master/scripts/examples/python/XenAPI.py -o /usr/lib/python2.7/site-packages/XenAPI.py
 
+5.3 Restart Nova Services
+
+    for svc in api cert conductor compute scheduler; do \
+	    service openstack-nova-$svc restart; \
+    done
+
 ##### 6. Configure Neutron
 6.1 Edit confguration itmes in */etc/neutron/rootwrap.conf* to support
 using XenServer remotely.
@@ -168,12 +174,11 @@ refer [xenserver_neutron picture](https://github.com/Annie-XIE/summary-os/blob/m
 
     /usr/bin/python2 /usr/bin/neutron-openvswitch-agent --config-file /usr/share/neutron/neutron-dist.conf --config-file /etc/neutron/neutron.conf --config-file /etc/neutron/plugins/openvswitch/ovs_neutron_plugin.ini.dom0 --config-dir /etc/neutron/conf.d/neutron-openvswitch-agent --log-file /var/log/neutron/openvswitch-agent.log.dom0 &
 
-##### 8. Restart Nova Services
-    for svc in api cert conductor compute scheduler; do \
-	    service openstack-nova-$svc restart; \
-    done
+7.3 Restart Neutron Openvswitch agent
 
-##### 9. Replace cirros guest with one set up to work for XenServer
+		service neutron-openvswitch-agent restart
+
+##### 8. Replace cirros guest with one set up to work for XenServer
     nova image-delete cirros
     wget http://ca.downloads.xensource.com/OpenStack/cirros-0.3.4-x86_64-disk.vhd.tgz
     glance image-create --name cirros --container-format ovf --disk-format vhd --property vm_mode=xen --is-public True --file cirros-0.3.4-x86_64-disk.vhd.tgz
