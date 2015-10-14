@@ -69,6 +69,14 @@ These items should be changed according to your environment:
 
 Use `packstack --answer-file=<ANSWER_FILE>` to install OpenStack components.
 
+*Note:*
+
+*CONFIG_NEUTRON_ML2_VLAN_RANGES is used for specifying physical network names 
+usable for VLAN provider and tenant networks, the ranges is for VLAN tags on 
+each available for allocation to tenant networks.*
+ 
+*CONFIG_NEUTRON_OVS_BRIDGE_MAPPINGS is the mapping of network name and ovs bridge*
+
 ##### 4. Configure OpenStackVM/Hypervisor communications
 4.1 Install XenServer PV tools in the OpenStack VM.
 
